@@ -38,7 +38,7 @@ def call_groq_with_retry(prompt, max_retries=3):
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are a data classification expert. Always respond with valid JSON only."
+                        "content": "You are a data security expert. Always respond with valid JSON only."
                     },
                     {
                         "role": "user",
@@ -66,45 +66,57 @@ def call_groq_with_retry(prompt, max_retries=3):
 
 def classify_data(dataset_name, description, fields):
     """
-    Main function to classify data using AI
+    Classifies data using AI
+    Used by /describe endpoint
     """
     try:
-        # Load prompt template
         template = load_prompt_template('classify_prompt')
-
-        # Replace placeholders with real values
         prompt = template.format(
             dataset_name=dataset_name,
             description=description,
             fields=', '.join(fields),
             generated_at=datetime.utcnow().isoformat()
         )
-
-        # Call Groq API
         response_text = call_groq_with_retry(prompt)
-
-        # If API failed return fallback
         if response_text is None:
             return get_fallback_response(dataset_name)
-
-        # Parse JSON response
         result = json.loads(response_text)
         result['is_fallback'] = False
         return result
-
-    except json.JSONDecodeError as e:
-        logger.error(f"JSON parse failed: {str(e)}")
-        return get_fallback_response(dataset_name)
-
     except Exception as e:
         logger.error(f"classify_data error: {str(e)}")
         return get_fallback_response(dataset_name)
 
 
+def recommend_actions(dataset_name, classification,
+                      sensitivity_level, description):
+    """
+    Generates 3 recommendations using AI
+    Used by /recommend endpoint
+    """
+    try:
+        template = load_prompt_template('recommend_prompt')
+        prompt = template.format(
+            dataset_name=dataset_name,
+            classification=classification,
+            sensitivity_level=sensitivity_level,
+            description=description,
+            generated_at=datetime.utcnow().isoformat()
+        )
+        response_text = call_groq_with_retry(prompt)
+        if response_text is None:
+            return get_fallback_recommendations(dataset_name)
+        result = json.loads(response_text)
+        result['is_fallback'] = False
+        return result
+    except Exception as e:
+        logger.error(f"recommend_actions error: {str(e)}")
+        return get_fallback_recommendations(dataset_name)
+
+
 def get_fallback_response(dataset_name):
     """
-    Returns safe response when AI is unavailable
-    PDF requires is_fallback: true
+    Returns safe fallback when AI unavailable
     """
     logger.warning(f"Returning fallback for: {dataset_name}")
     return {
@@ -115,6 +127,35 @@ def get_fallback_response(dataset_name):
         "compliance_requirements": ["Manual Review Required"],
         "risks": ["Classification pending manual review"],
         "recommended_handling": "Please review manually.",
+        "generated_at": datetime.utcnow().isoformat(),
+        "is_fallback": True
+    }
+
+
+def get_fallback_recommendations(dataset_name):
+    """
+    Returns safe fallback recommendations
+    when AI is unavailable
+    """
+    logger.warning(f"Returning fallback recommendations for: {dataset_name}")
+    return {
+        "recommendations": [
+            {
+                "action_type": "ENCRYPT",
+                "description": "Encrypt all sensitive data fields at rest and in transit.",
+                "priority": "HIGH"
+            },
+            {
+                "action_type": "ACCESS_CONTROL",
+                "description": "Restrict access to authorized personnel only.",
+                "priority": "HIGH"
+            },
+            {
+                "action_type": "AUDIT",
+                "description": "Enable audit logging for all data access.",
+                "priority": "MEDIUM"
+            }
+        ],
         "generated_at": datetime.utcnow().isoformat(),
         "is_fallback": True
     }
