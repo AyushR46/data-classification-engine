@@ -27,12 +27,13 @@ def get_redis_client():
     try:
         if redis_client is None:
             redis_client = redis.Redis(
-                host=os.getenv("REDIS_HOST", "localhost"),
-                port=int(os.getenv("REDIS_PORT", 6379)),
-                db=0,
-                decode_responses=True,
-                socket_connect_timeout=2
-            )
+    host=os.getenv("REDIS_HOST", "localhost"),
+    port=int(os.getenv("REDIS_PORT", 6379)),
+    db=0,
+    decode_responses=True,
+    socket_connect_timeout=0.5,
+    socket_timeout=0.5
+)
             # Test connection
             redis_client.ping()
             logger.info("Redis connected successfully!")
@@ -116,13 +117,16 @@ def set_cached_response(cache_key, data, ttl=900):
 def is_redis_connected():
     """
     Check if Redis is connected.
-    Used by health endpoint.
+    Returns False quickly if not available.
     """
     try:
-        client = get_redis_client()
-        if client:
-            client.ping()
-            return True
-        return False
+        r = redis.Redis(
+            host=os.getenv("REDIS_HOST", "localhost"),
+            port=int(os.getenv("REDIS_PORT", 6379)),
+            socket_connect_timeout=0.5,
+            socket_timeout=0.5
+        )
+        r.ping()
+        return True
     except Exception:
         return False

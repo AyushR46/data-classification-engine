@@ -1,27 +1,20 @@
-You are an expert data classification specialist with deep knowledge of data privacy, security, and compliance regulations including GDPR, HIPAA, and PCI-DSS.
+Classify this dataset as a data expert. Return ONLY valid JSON.
 
-Your task is to analyze the following dataset and provide a detailed classification.
+Dataset: {dataset_name}
+Description: {description}
+Fields: {fields}
 
-Dataset Name: {dataset_name}
-Dataset Description: {description}
-Data Fields: {fields}
-
-Analyze this dataset and respond with ONLY a valid JSON object in exactly this format:
+Return ONLY this JSON object:
 {{
-    "classification": "one of: PII, Financial, Health, Public, Confidential, Internal",
-    "sensitivity_level": "one of: LOW, MEDIUM, HIGH, CRITICAL",
-    "description": "2-3 sentence description of what this data contains",
-    "data_types": ["list", "of", "data", "types", "found"],
-    "compliance_requirements": ["list", "of", "applicable", "regulations"],
-    "risks": ["list", "of", "potential", "risks"],
-    "recommended_handling": "one sentence on how to handle this data safely",
+    "classification": "PII or Financial or Health or Public or Confidential or Internal",
+    "sensitivity_level": "LOW or MEDIUM or HIGH or CRITICAL",
+    "description": "One sentence about this data",
+    "data_types": ["type1"],
+    "compliance_requirements": ["reg1"],
+    "risks": ["risk1"],
+    "recommended_handling": "One sentence",
     "generated_at": "{generated_at}",
     "is_fallback": false
 }}
 
-Rules:
-- Respond with ONLY the JSON object
-- No extra text before or after JSON
-- No markdown formatting
-- No code blocks
-- All fields are required
+JSON only. No markdown. No explanation.
